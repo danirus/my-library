@@ -4,7 +4,7 @@ This is an almost empty Python package with Sphinx documentation.
 
 The goal is to create a project that publishes different versions of the documentation together. Like [Read the Docs](https://about.readthedocs.com/) does.
 
-When using Read the Docs, I don't have to worry about creating a directory structure to store each version of the documentation, they do that. Also they provide the hosting, and some other valuable features. This project tries to accomplish something similar using self controlled resources.
+When using Read the Docs, I don't have to worry about creating a directory structure to store each version of the documentation, they do that. Also they provide the hosting, and some other valuable features. This project tries to accomplish something similar using resources under your control.
 
 ## Lifecycle of my-library
 
