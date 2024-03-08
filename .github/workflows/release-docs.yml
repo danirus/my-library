@@ -4,41 +4,55 @@ on:
   workflow_dispatch:
 
 jobs:
-    docs:
-        runs-on: ubuntu-latest
-        steps:
-          - name: Checkout
-            uses: actions/checkout@v4
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-          - name: Setup Python
-            uses: actions/setup-python@v3
-            with:
-              python-version: 3.12
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.12
 
-          - name: Build the docs
-            uses: ammaraskar/sphinx-action@master
-            with:
-              docs-folder: "docs/"
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secret.AWS_REGION }}
 
-          - name: Get version number
-            id: version
-            run: |
-                {
-                    echo 'VERSION<<EOF'
-                    python -c \
-                      'import my_library; print(my_library.get_version())'
-                    echo EOF
-                } >> "$GITHUB_ENV"
 
-        #   - name: Test new GH env variable
-        #     run: |
-        #         printf '%s\n' "$VERSION"
+      - name: Build the docs
+        uses: ammaraskar/sphinx-action@master
+        with:
+          docs-folder: "docs/"
 
-          - name: Upload docs to S3
-            uses: shallwefootball/s3-upload-action@master
-            with:
-              aws_key_id: ${{ secrets.AWS_KEY_ID }}
-              aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-              aws_bucket: ${{ secrets.AWS_BUCKET }}
-              source_dir: docs/_build/html/
-              destination_dir: v${{ env.VERSION }}
+      - name: Get version number
+        id: version
+        run: |
+          {
+              echo 'VERSION<<EOF'
+              python -c \
+                'import my_library; print(my_library.get_version())'
+              echo EOF
+          } >> "$GITHUB_ENV"
+
+      #   - name: Test new GH env variable
+      #     run: |
+      #         printf '%s\n' "$VERSION"
+
+      - name: Upload docs to S3
+        run: |
+          aws s3 sync --delete --acl public-read docs/_build/html/ \
+            s3://${{ secrets.AWS_BUCKET }}/v$VERSION
+
+
+      # - name: Upload docs to S3
+      #   uses: shallwefootball/s3-upload-action@master
+      #   with:
+      #     aws_key_id: ${{ secrets.AWS_KEY_ID }}
+      #     aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws_bucket: ${{ secrets.AWS_BUCKET }}
+      #     source_dir: docs/_build/html/
+      #     destination_dir: v${{ env.VERSION }}
