@@ -22,8 +22,14 @@ jobs:
 
           - name: Get version number
             id: version
-            run: echo "::set-output name=version::$(python -c 'import my_library; print(my_library.get_version())')"
+            run: |
+                {
+                    echo 'VERSION<<EOF'
+                    python -c \
+                      'import my_library; print(my_library.get_version())'
+                    echo EOF
+                } >> "$GITHUB_ENV"
 
           - name: Test new GH env variable
             run: |
-                echo ${{ steps.version.outputs.version }}
+                printf '%s\n' "$VERSION"
