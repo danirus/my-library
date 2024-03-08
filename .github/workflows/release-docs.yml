@@ -1,0 +1,29 @@
+name: release-docs
+
+on:
+  workflow_dispatch:
+
+jobs:
+    docs:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+
+          - name: Setup Python
+            uses: actions/setup-python@v3
+            with:
+              python-version: 3.12
+
+          - name: Build the docs
+            uses: ammaraskar/sphinx-action@master
+            with:
+              docs-folder: "docs/"
+
+          - name: Get version number
+            id: version
+            run: echo "::set-output name=version::$(python -c 'import my_library; print(my_library.get_version())')"
+
+          - name: Test new GH env variable
+            run: |
+                echo ${{ steps.version.outputs.version }}
