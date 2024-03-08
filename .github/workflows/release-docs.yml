@@ -42,17 +42,32 @@ jobs:
       #     run: |
       #         printf '%s\n' "$VERSION"
 
-      - name: Upload docs to S3
+      - name: Create index.html
+        run: |
+          echo "<html>"                                          >  index.html
+          echo "  <script>"                                      >> index.html
+          echo "    window.location.href = 'latest/index.html'"  >> index.html
+          echo "  </script>"                                     >> index.html
+          echo "</html>"                                         >> index.html
+
+      - name: Upload index.html to S3
+        run: |
+          aws s3 cp --acl public-read index.html s3://${{ secrets.AWS_BUCKET }}
+
+      - name: Delete "latest" directory from S3
+        run: |
+          aws s3 rm --recursive s3://${{ secrets.AWS_BUCKET }}/latest
+
+      - name: Upload docs to S3 version directory
+        run: |
+          aws s3 sync --delete --acl public-read docs/_build/html/ \
+            s3://${{ secrets.AWS_BUCKET }}/latest
+
+      - name: Delete version directory from S3
+        run: |
+          aws s3 rm --recursive s3://${{ secrets.AWS_BUCKET }}/v$VERSION
+
+      - name: Upload docs to S3 version directory
         run: |
           aws s3 sync --delete --acl public-read docs/_build/html/ \
             s3://${{ secrets.AWS_BUCKET }}/v$VERSION
-
-
-      # - name: Upload docs to S3
-      #   uses: shallwefootball/s3-upload-action@master
-      #   with:
-      #     aws_key_id: ${{ secrets.AWS_KEY_ID }}
-      #     aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws_bucket: ${{ secrets.AWS_BUCKET }}
-      #     source_dir: docs/_build/html/
-      #     destination_dir: v${{ env.VERSION }}
